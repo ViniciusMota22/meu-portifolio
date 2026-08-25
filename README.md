@@ -1,36 +1,18 @@
 # Vinicius Mota — Portfólio
 
-Portfólio pessoal desenvolvido para apresentar meus projetos, estudos e evolução na área de Inteligência Artificial e desenvolvimento.
+Portfólio pessoal desenvolvido com React, JavaScript, Vite e Motion.
 
 ## Tecnologias
 
 - React
 - JavaScript
 - Vite
-- HTML
-- CSS
 - Motion
-
-## Sobre mim
-
-Sou estudante de Tecnologia em Inteligência Artificial, atualmente no 3º período.
-
-Tenho conhecimentos em:
-
-- Python
-- C
-- C++
-- JavaScript
-- HTML
 - CSS
-- Banco de Dados
-- Machine Learning
-- Inteligência Artificial
-- Ciência de Dados
 
-## Portfólio
+## Sobre
 
-Em breve disponível online pelo Vercel.
+Estudante de Tecnologia em Inteligência Artificial, atualmente no 3º período, com foco em programação, dados e aplicações de IA.
 
 ## Contato
 

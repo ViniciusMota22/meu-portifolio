@@ -223,26 +223,6 @@ function App() {
             </motion.div>
           </div>
 
-          <motion.div
-            className="hero-visual"
-            initial={{ opacity: 0, scale: 0.94, rotate: 2 }}
-            animate={{ opacity: 1, scale: 1, rotate: 0 }}
-            transition={{ duration: 0.9, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <div className="photo-frame">
-              <img src="/vinicius-mota.jfif" alt="Vinicius Mota" />
-              <div className="photo-overlay" />
-              <span className="photo-code">VM — 2026</span>
-            </div>
-            <motion.div className="float-card float-a" animate={{ y: [0, -9, 0] }} transition={{ duration: 4.8, repeat: Infinity }}>
-              <BrainCircuit size={18} /><span>IA</span>
-            </motion.div>
-            <motion.div className="float-card float-b" animate={{ y: [0, 10, 0] }} transition={{ duration: 5.3, repeat: Infinity }}>
-              <Code2 size={18} /><span>DEV</span>
-            </motion.div>
-            <div className="orbit orbit-one" />
-            <div className="orbit orbit-two" />
-          </motion.div>
         </section>
 
         <div className="marquee" aria-hidden="true">
@@ -259,25 +239,42 @@ function App() {
             copy="Minha formação está focada em Inteligência Artificial, mas eu gosto de entender o caminho completo: lógica, programação, dados, web, cloud e como tudo isso se conecta em um produto real."
           />
 
-          <div className="about-grid">
-            <motion.article className="statement-card" variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }}>
-              <span className="mono-label">FORMAÇÃO ATUAL</span>
-              <strong>Tecnologia em Inteligência Artificial</strong>
-              <p>3º período · formação em andamento</p>
-            </motion.article>
-            <motion.article className="statement-card" variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }} transition={{ delay: 0.08 }}>
-              <span className="mono-label">FOCO</span>
-              <strong>IA aplicada + desenvolvimento</strong>
-              <p>Projetos acadêmicos e evolução constante da base técnica.</p>
-            </motion.article>
-            <motion.article className="statement-card wide" variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }} transition={{ delay: 0.12 }}>
-              <span className="mono-label">STACK EM CONSTRUÇÃO</span>
-              <div className="skill-cloud">
-                {skills.map(({ name, level, icon: Icon }) => (
-                  <span className="skill-chip" key={name}><Icon size={14} />{name}<small>{level}</small></span>
-                ))}
+          <div className="about-profile">
+            <motion.div
+              className="profile-photo-wrap"
+              variants={fade}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true }}
+            >
+              <div className="profile-photo">
+                <img src="/vinicius-mota.jfif" alt="Vinicius Mota" />
               </div>
-            </motion.article>
+              <span className="profile-caption">VINICIUS MOTA · IA / DEV</span>
+            </motion.div>
+
+            <div className="about-content">
+              <motion.div className="about-summary" variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }}>
+                <span className="mono-label">FORMAÇÃO ATUAL</span>
+                <strong>Tecnologia em Inteligência Artificial</strong>
+                <p>3º período · formação em andamento. Construindo uma base consistente em programação, dados e aplicações de IA.</p>
+              </motion.div>
+
+              <motion.div className="about-summary" variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }} transition={{ delay: 0.08 }}>
+                <span className="mono-label">FOCO</span>
+                <strong>IA aplicada + desenvolvimento</strong>
+                <p>Projetos acadêmicos e evolução constante da base técnica, com atenção ao porquê de cada tecnologia.</p>
+              </motion.div>
+
+              <motion.div className="stack-block" variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }} transition={{ delay: 0.12 }}>
+                <span className="mono-label">STACK EM CONSTRUÇÃO</span>
+                <div className="skill-cloud">
+                  {skills.map(({ name, level, icon: Icon }) => (
+                    <span className="skill-chip" key={name}><Icon size={14} />{name}<small>{level}</small></span>
+                  ))}
+                </div>
+              </motion.div>
+            </div>
           </div>
         </section>
 
