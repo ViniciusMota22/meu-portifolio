@@ -1,387 +1,149 @@
-import { useEffect, useMemo, useState } from 'react'
-import { motion, useScroll, useSpring } from 'motion/react'
-import {
-  ArrowDown,
-  ArrowUpRight,
-  Bot,
-  BrainCircuit,
-  Check,
-  Cloud,
-  Code2,
-  Copy,
-  Database,
-  User,
-  Mail,
-  Menu,
-  Moon,
-  Sparkles,
-  Sun,
-  X,
-} from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { AnimatePresence, motion, MotionConfig, useMotionValue, useReducedMotion, useScroll, useSpring } from 'motion/react'
+import { ArrowDown, ArrowRight, ArrowUp, ArrowUpRight, Check, ChevronDown, Code2, Copy, Menu, Moon, Sun, X } from 'lucide-react'
+import { EMAIL, GITHUB, navigation, projects, areas, skills } from './content.jsx'
 
-const knowledgeAreas = [
-  {
-    number: '01',
-    title: 'Programação & fundamentos',
-    description: 'Construindo uma base sólida em lógica, algoritmos e desenvolvimento.',
-    topics: ['Python', 'C', 'C++', 'JavaScript'],
-  },
-  {
-    number: '02',
-    title: 'Inteligência Artificial',
-    description: 'Estudando os fundamentos que conectam dados, modelos e aplicações inteligentes.',
-    topics: ['Machine Learning', 'Ciência de Dados', 'IA & Chatbots'],
-  },
-  {
-    number: '03',
-    title: 'Dados & infraestrutura',
-    description: 'Entendendo como dados são organizados, processados e disponibilizados em sistemas.',
-    topics: ['Banco de Dados', 'Engenharia de Dados', 'Cloud'],
-  },
-  {
-    number: '04',
-    title: 'Web & produto',
-    description: 'Usando a web para transformar conhecimento técnico em experiências e projetos reais.',
-    topics: ['HTML', 'CSS', 'React', 'APIs'],
-  },
-]
+const easing = [.22, 1, .36, 1]
 
-const skills = [
-  { name: 'Python', level: 'base', icon: Code2 },
-  { name: 'C', level: 'base', icon: Code2 },
-  { name: 'C++', level: 'base', icon: Code2 },
-  { name: 'HTML', level: 'base', icon: Code2 },
-  { name: 'CSS', level: 'base', icon: Code2 },
-  { name: 'JavaScript', level: 'base', icon: Code2 },
-  { name: 'Banco de Dados', level: 'base', icon: Database },
-  { name: 'Machine Learning', level: 'estudando', icon: BrainCircuit },
-  { name: 'Chatbots & IA', level: 'estudando', icon: Bot },
-  { name: 'Cloud', level: 'estudando', icon: Cloud },
-  { name: 'React', level: 'em aprendizado', icon: Sparkles },
-  { name: 'Vue', level: 'explorando', icon: Sparkles },
-]
-
-const projects = [
-  {
-    number: '01',
-    title: 'IRONDARK V11',
-    eyebrow: 'E-commerce + IA',
-    description:
-      'Plataforma acadêmica de suplementos com catálogo, carrinho, checkout e chatbot integrado ao Google Gemini.',
-    tech: ['HTML', 'CSS', 'JavaScript', 'Node.js', 'Express', 'Gemini API'],
-    href: 'https://github.com/ViniciusMota22/mini-produto-suplementos',
-    mark: 'ID',
-  },
-  {
-    number: '02',
-    title: 'Sistema Academia',
-    eyebrow: 'Gestão web',
-    description:
-      'Sistema para gerenciamento de academia com dashboard, CRUD de alunos e planos, matrículas, busca e tema claro/escuro.',
-    tech: ['Python', 'Flask', 'PostgreSQL', 'SQLAlchemy', 'JavaScript'],
-    href: 'https://github.com/ViniciusMota22/sistema_academia',
-    mark: 'GY',
-  },
-  {
-    number: '03',
-    title: 'Projeto Render',
-    eyebrow: 'Backend / Deploy',
-    description:
-      'Projeto público com estrutura em Python, templates e camada de dados, organizado para execução e deploy em ambiente web.',
-    tech: ['Python', 'Templates', 'Models', 'Render'],
-    href: 'https://github.com/ViniciusMota22/projeto-render',
-    mark: 'PY',
-  },
-]
-
-const fade = {
-  hidden: { opacity: 0, y: 24 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.65, ease: [0.22, 1, 0.36, 1] } },
+function Reveal({ children, className = '', delay = 0 }) {
+  const reduced = useReducedMotion()
+  return <motion.div className={className} initial={reduced ? false : { opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: .1 }} transition={{ duration: .7, delay, ease: easing }}>{children}</motion.div>
 }
 
-function SectionHeading({ index, eyebrow, title, copy }) {
-  return (
-    <motion.div
-      className="section-heading"
-      variants={fade}
-      initial="hidden"
-      whileInView="show"
-      viewport={{ once: true, margin: '-80px' }}
-    >
-      <div className="section-kicker"><span>{index}</span>{eyebrow}</div>
-      <h2>{title}</h2>
-      {copy && <p>{copy}</p>}
-    </motion.div>
-  )
+function MagneticLink({ children, className = '', ...props }) {
+  const reduced = useReducedMotion()
+  const mx = useMotionValue(0), my = useMotionValue(0)
+  const x = useSpring(mx, { stiffness: 190, damping: 22 })
+  const y = useSpring(my, { stiffness: 190, damping: 22 })
+  function move(event) {
+    if (reduced || event.pointerType !== 'mouse') return
+    const rect = event.currentTarget.getBoundingClientRect()
+    mx.set((event.clientX - rect.left - rect.width / 2) * .09)
+    my.set((event.clientY - rect.top - rect.height / 2) * .12)
+  }
+  return <motion.a {...props} className={className} style={{ x, y }} onPointerMove={move} onPointerLeave={() => { mx.set(0); my.set(0) }}>{children}</motion.a>
+}
+
+function Portrait() {
+  const reduced = useReducedMotion()
+  const mx = useMotionValue(0), my = useMotionValue(0)
+  const rotateX = useSpring(my, { stiffness: 100, damping: 22 })
+  const rotateY = useSpring(mx, { stiffness: 100, damping: 22 })
+  return <div className="portrait-stage" onPointerMove={e => {
+    if (reduced || e.pointerType !== 'mouse') return
+    const r = e.currentTarget.getBoundingClientRect()
+    mx.set(((e.clientX - r.left) / r.width - .5) * 7)
+    my.set(-((e.clientY - r.top) / r.height - .5) * 7)
+  }} onPointerLeave={() => { mx.set(0); my.set(0) }}>
+    <motion.figure className="portrait" style={{ rotateX, rotateY }}>
+      <img src="/vinicius-mota.jfif" alt="Vinicius Mota" width="1024" height="1024" fetchPriority="high" />
+      <figcaption><span>Vinicius Mota</span><span>IA & desenvolvimento</span></figcaption>
+    </motion.figure>
+    <span className="portrait-caption"><span aria-hidden="true">↳</span> Aprendendo. Experimentando. Criando.</span>
+  </div>
+}
+
+function ProjectCard({ project, index }) {
+  const [expanded, setExpanded] = useState(false)
+  const reduced = useReducedMotion()
+  return <Reveal className="project-item" delay={index * .07}>
+    <article>
+      <a className={`project-cover cover-${project.style}`} href={project.href} target="_blank" rel="noreferrer" aria-label={`Ver ${project.title} no GitHub`}>
+        <span className="cover-index">0{index + 1} /</span>
+        <span className="cover-mark" aria-hidden="true">{index === 0 ? <>iron<span>dark</span><small>V11</small></> : index === 1 ? <>gym<span className="gym-dot">.</span></> : <><span className="code-bracket">(</span>py<span className="code-bracket">)</span></>}</span>
+        <span className="cover-bottom"><span>{['Comércio + IA', 'Gestão + dados', 'Python + deploy'][index]}</span><span className="cover-action"><ArrowUpRight size={19}/></span></span>
+        <span className="cover-shine" aria-hidden="true"/>
+      </a>
+      <div className="project-heading"><h3><a href={project.href} target="_blank" rel="noreferrer">{project.title}</a></h3><span className="project-number">0{index + 1}</span></div>
+      <p className="project-category">{project.category}</p>
+      <p className="project-description">{project.description}</p>
+      <button className="details-trigger" aria-expanded={expanded} aria-controls={`project-details-${index}`} onClick={() => setExpanded(!expanded)}>{expanded ? 'Menos detalhes' : 'Tecnologias do projeto'}<ChevronDown size={16} className={expanded ? 'rotated' : ''}/></button>
+      <AnimatePresence initial={false}>{expanded && <motion.div id={`project-details-${index}`} initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: reduced ? 0 : .32, ease: easing }} className="project-details"><div className="tags">{project.tech.map(tech => <span key={tech}>{tech}</span>)}</div><a className="source-link" href={project.href} target="_blank" rel="noreferrer">Explorar o código <ArrowUpRight size={15}/></a></motion.div>}</AnimatePresence>
+    </article>
+  </Reveal>
+}
+
+function Knowledge() {
+  const [open, setOpen] = useState(0)
+  const reduced = useReducedMotion()
+  return <div className="knowledge-list">{areas.map((area, index) => <div className={`knowledge-item ${open === index ? 'is-open' : ''}`} key={area.label}>
+    <h3><button id={`area-trigger-${index}`} className="knowledge-trigger" onClick={() => setOpen(open === index ? null : index)} aria-expanded={open === index} aria-controls={`area-panel-${index}`}><span className="area-number">0{index + 1}</span><span>{area.label}</span><span className="area-toggle" aria-hidden="true"><span/><span/></span></button></h3>
+    <AnimatePresence initial={false}>{open === index && <motion.div id={`area-panel-${index}`} role="region" aria-labelledby={`area-trigger-${index}`} className="knowledge-panel" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: reduced ? 0 : .4, ease: easing }}><div className="knowledge-panel-inner"><p>{area.description}</p><div className="tags">{area.topics.map(topic => <span key={topic}>{topic}</span>)}</div></div></motion.div>}</AnimatePresence>
+  </div>)}</div>
 }
 
 function App() {
-  const [theme, setTheme] = useState('dark')
+  const [theme, setTheme] = useState(() => { try { return localStorage.getItem('vm-minimal-theme') || 'light' } catch { return 'light' } })
   const [menuOpen, setMenuOpen] = useState(false)
-  const [copied, setCopied] = useState(false)
+  const [activeSection, setActiveSection] = useState('top')
+  const [copyState, setCopyState] = useState('idle')
+  const menuButton = useRef(null), copyTimer = useRef(null)
+  const reduced = useReducedMotion()
   const { scrollYProgress } = useScroll()
-  const scaleX = useSpring(scrollYProgress, { stiffness: 160, damping: 26, mass: 0.25 })
-
+  const scaleX = useSpring(scrollYProgress, { stiffness: 160, damping: 30 })
   useEffect(() => {
     document.documentElement.dataset.theme = theme
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'light' ? '#ffffff' : '#161719')
+    try { localStorage.setItem('vm-minimal-theme', theme) } catch { /* Local persistence is optional. */ }
   }, [theme])
-
   useEffect(() => {
-    const onMove = (event) => {
-      document.documentElement.style.setProperty('--mx', `${event.clientX}px`)
-      document.documentElement.style.setProperty('--my', `${event.clientY}px`)
+    const sections = [...document.querySelectorAll('main > section[id]')]
+    let frame = 0
+    const update = () => {
+      frame = 0
+      const marker = window.innerHeight * .3
+      const current = sections.filter(section => section.getBoundingClientRect().top <= marker).at(-1)
+      setActiveSection(current?.id || 'top')
     }
-    window.addEventListener('pointermove', onMove)
-    return () => window.removeEventListener('pointermove', onMove)
+    const schedule = () => { if (!frame) frame = requestAnimationFrame(update) }
+    window.addEventListener('scroll', schedule, { passive: true })
+    window.addEventListener('resize', schedule)
+    update()
+    return () => {
+      window.removeEventListener('scroll', schedule)
+      window.removeEventListener('resize', schedule)
+      cancelAnimationFrame(frame)
+    }
   }, [])
-
-  const marquee = useMemo(
-    () => ['INTELIGÊNCIA ARTIFICIAL', 'DESENVOLVIMENTO WEB', 'DADOS', 'AUTOMAÇÃO', 'APRENDIZADO CONTÍNUO'],
-    [],
-  )
-
+  useEffect(() => {
+    const handler = event => { if (event.key === 'Escape' && menuOpen) { setMenuOpen(false); menuButton.current?.focus() } }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [menuOpen])
+  useEffect(() => () => clearTimeout(copyTimer.current), [])
   async function copyEmail() {
-    await navigator.clipboard.writeText('vmota287@gmail.com')
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1800)
+    clearTimeout(copyTimer.current)
+    try { await navigator.clipboard.writeText(EMAIL); setCopyState('success') } catch { setCopyState('error') }
+    copyTimer.current = setTimeout(() => setCopyState('idle'), 4000)
   }
+  return <MotionConfig reducedMotion="user">
+    <a href="#conteudo" className="skip-link">Pular para o conteúdo</a>
+    <motion.div aria-hidden="true" className="scroll-progress" style={{ scaleX: reduced ? scrollYProgress : scaleX }}/>
+    <header className="header"><div className="nav-wrap wrap">
+      <a href="#top" className="brand" aria-label="Vinicius Mota — início">vm<span>.</span></a>
+      <nav className="desktop-nav" aria-label="Navegação principal">{navigation.map(([id, label]) => <a key={id} href={`#${id}`} aria-current={activeSection === id ? 'location' : undefined}>{activeSection === id && <motion.span className="nav-active" layoutId="active-navigation" transition={{ type: 'spring', stiffness: 300, damping: 32 }}/>}<span>{label}</span></a>)}</nav>
+      <div className="nav-actions"><button className="icon-button" aria-label={theme === 'light' ? 'Ativar tema escuro' : 'Ativar tema claro'} onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>{theme === 'light' ? <Moon size={18}/> : <Sun size={18}/>}</button><a href="#contato" className="nav-contact">Contato <ArrowUpRight size={16}/></a><button ref={menuButton} className="icon-button menu-button" aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'} aria-expanded={menuOpen} aria-controls="mobile-navigation" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X size={21}/> : <Menu size={21}/>}</button></div>
+    </div><AnimatePresence>{menuOpen && <motion.nav id="mobile-navigation" className="mobile-nav" aria-label="Navegação móvel" initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: .2 }}>{[...navigation, ['contato', 'Contato']].map(([id, label]) => <a key={id} href={`#${id}`} onClick={() => setMenuOpen(false)}>{label}<ArrowUpRight size={18}/></a>)}</motion.nav>}</AnimatePresence></header>
 
-  return (
-    <div className="site-shell">
-      <motion.div className="scroll-progress" style={{ scaleX }} />
-      <div className="pointer-glow" aria-hidden="true" />
-      <div className="grid-noise" aria-hidden="true" />
+    <main id="conteudo">
+      <section className="hero wrap" id="top" aria-labelledby="hero-title"><div className="hero-grid">
+        <div className="hero-main"><Reveal><div className="eyebrow"><span className="small-line"/> Vinicius Mota · IA & desenvolvimento</div></Reveal>
+          <Reveal delay={.06}><h1 id="hero-title">Curiosidade que<br/>vira <em>experiência.</em></h1></Reveal>
+          <Reveal delay={.12}><p className="hero-description">Exploro código, dados e inteligência artificial para transformar o que aprendo em algo que você pode usar.</p></Reveal>
+          <Reveal className="hero-actions" delay={.18}><MagneticLink href="#projetos" className="button-primary">Conheça meus projetos <ArrowDown size={17}/></MagneticLink><a className="text-link" href="#sobre">Um pouco sobre mim <ArrowRight size={16}/></a></Reveal>
+          <Reveal className="hero-note" delay={.22}><Code2 size={15}/><span>Tecnologia em Inteligência Artificial · 3º período</span></Reveal>
+        </div><Reveal className="hero-portrait" delay={.15}><Portrait/></Reveal>
+      </div><div className="hero-bottom"><span>Uma ideia de cada vez.</span><a href="#projetos">Explore <ArrowDown size={14}/></a></div></section>
 
-      <header className="nav-wrap">
-        <a className="brand" href="#top" aria-label="Início">
-          <span className="brand-mark">VM</span>
-          <span className="brand-text">VINICIUS MOTA</span>
-        </a>
+      <section className="projects section wrap" id="projetos" aria-labelledby="projects-title"><Reveal className="section-heading"><div><span className="eyebrow">01 — Projetos selecionados</span><h2 id="projects-title">Aprender. Fazer. <em>Evoluir.</em></h2></div><a className="text-link" href={`${GITHUB}?tab=repositories`} target="_blank" rel="noreferrer">Todos no GitHub <ArrowUpRight size={16}/></a></Reveal><div className="project-grid">{projects.map((project, index) => <ProjectCard key={project.number} project={project} index={index}/>)}</div></section>
 
-        <nav className="desktop-nav" aria-label="Navegação principal">
-          <a href="#sobre">Sobre</a>
-          <a href="#conhecimentos">Conhecimentos</a>
-          <a href="#projetos">Projetos</a>
-          <a href="#contato">Contato</a>
-        </nav>
+      <section className="about section" id="sobre" aria-labelledby="about-title"><div className="wrap about-grid"><Reveal><span className="eyebrow">02 — Sobre mim</span><h2 id="about-title">Gosto de entender.<br/><em>Mais ainda de criar.</em></h2><a className="text-link" href="https://www.linkedin.com/in/vinicius-mota-4a443a352/" target="_blank" rel="noreferrer">Vamos nos conectar <ArrowUpRight size={16}/></a></Reveal><Reveal className="about-copy"><p className="about-lead">O melhor jeito de aprender, para mim, é construir.</p><p>Sou estudante de Tecnologia em Inteligência Artificial, no 3º período. Minha curiosidade passa por todo o caminho: da lógica à interface, dos dados à experiência.</p><p>Estou desenvolvendo minha base técnica com projetos acadêmicos e aplicações práticas de IA. Gosto de entender o porquê de cada escolha — e o que acontece quando as ideias saem do papel.</p><div className="education"><span>Formação em andamento</span><strong>Tecnologia em Inteligência Artificial</strong><span>3º período · IA aplicada + desenvolvimento</span></div></Reveal></div></section>
 
-        <div className="nav-actions">
-          <button
-            className="icon-btn"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-            aria-label="Alternar tema"
-          >
-            {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
-          </button>
-          <button className="icon-btn mobile-only" onClick={() => setMenuOpen(!menuOpen)} aria-label="Abrir menu">
-            {menuOpen ? <X size={19} /> : <Menu size={19} />}
-          </button>
-        </div>
-      </header>
+      <section className="knowledge section wrap" id="conhecimentos" aria-labelledby="knowledge-title"><div className="knowledge-grid"><Reveal><span className="eyebrow">03 — Conhecimentos</span><h2 id="knowledge-title">Conectando<br/><em>os pontos.</em></h2><p className="section-description">Uma base que cresce com cada projeto.<br/>Explore minhas áreas de estudo.</p></Reveal><Reveal><Knowledge/></Reveal></div><Reveal className="stack"><span className="eyebrow">Ferramentas em construção</span><div className="stack-list">{skills.map(([skill, level]) => <span className="stack-item" key={skill}>{skill}<small>{level}</small></span>)}</div><p className="academic-note">Na graduação: Matemática e Estatística para IA, Metodologias Ágeis e Empreendedorismo.</p></Reveal></section>
 
-      {menuOpen && (
-        <motion.div className="mobile-menu" initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-          {['sobre', 'conhecimentos', 'projetos', 'contato'].map((item) => (
-            <a key={item} href={`#${item}`} onClick={() => setMenuOpen(false)}>{item}</a>
-          ))}
-        </motion.div>
-      )}
-
-      <main>
-        <section className="hero section" id="top">
-          <div className="hero-copy">
-            <motion.div className="status-pill" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }}>
-              <span className="status-dot" /> Tecnólogo em IA · 3º período
-            </motion.div>
-
-            <motion.h1
-              initial="hidden"
-              animate="show"
-              variants={{
-                hidden: {},
-                show: { transition: { staggerChildren: 0.09, delayChildren: 0.12 } },
-              }}
-            >
-              <motion.span variants={fade}>Código, dados</motion.span>
-              <motion.span variants={fade}>e inteligência</motion.span>
-              <motion.span className="accent-line" variants={fade}>em movimento.</motion.span>
-            </motion.h1>
-
-            <motion.p className="hero-lead" variants={fade} initial="hidden" animate="show" transition={{ delay: 0.5 }}>
-              Sou Vinicius Mota. Estou construindo minha base em Inteligência Artificial e desenvolvimento, transformando estudo em projetos práticos e experiências digitais.
-            </motion.p>
-
-            <motion.div className="hero-cta" variants={fade} initial="hidden" animate="show" transition={{ delay: 0.62 }}>
-              <a className="btn btn-primary" href="#projetos">Ver projetos <ArrowDown size={17} /></a>
-              <a className="btn btn-ghost" href="https://github.com/ViniciusMota22" target="_blank" rel="noreferrer">GitHub <ArrowUpRight size={17} /></a>
-            </motion.div>
-
-            <motion.div className="hero-meta" variants={fade} initial="hidden" animate="show" transition={{ delay: 0.72 }}>
-              <span>PY / C / C++</span>
-              <span>HTML / CSS / JS</span>
-              <span>DB / AI / CLOUD</span>
-            </motion.div>
-          </div>
-
-        </section>
-
-        <div className="marquee" aria-hidden="true">
-          <div className="marquee-track">
-            {[...marquee, ...marquee].map((item, i) => <span key={`${item}-${i}`}>{item}<b>✦</b></span>)}
-          </div>
-        </div>
-
-        <section className="section about" id="sobre">
-          <SectionHeading
-            index="01"
-            eyebrow="Sobre"
-            title="Aprendendo por construção."
-            copy="Minha formação está focada em Inteligência Artificial, mas eu gosto de entender o caminho completo: lógica, programação, dados, web, cloud e como tudo isso se conecta em um produto real."
-          />
-
-          <div className="about-profile">
-            <motion.div
-              className="profile-photo-wrap"
-              variants={fade}
-              initial="hidden"
-              whileInView="show"
-              viewport={{ once: true }}
-            >
-              <div className="profile-photo">
-                <img src="/vinicius-mota.jfif" alt="Vinicius Mota" />
-              </div>
-              <span className="profile-caption">VINICIUS MOTA · IA / DEV</span>
-            </motion.div>
-
-            <div className="about-content">
-              <motion.div className="about-summary" variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }}>
-                <span className="mono-label">FORMAÇÃO ATUAL</span>
-                <strong>Tecnologia em Inteligência Artificial</strong>
-                <p>3º período · formação em andamento. Construindo uma base consistente em programação, dados e aplicações de IA.</p>
-              </motion.div>
-
-              <motion.div className="about-summary" variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }} transition={{ delay: 0.08 }}>
-                <span className="mono-label">FOCO</span>
-                <strong>IA aplicada + desenvolvimento</strong>
-                <p>Projetos acadêmicos e evolução constante da base técnica, com atenção ao porquê de cada tecnologia.</p>
-              </motion.div>
-
-              <motion.div className="stack-block" variants={fade} initial="hidden" whileInView="show" viewport={{ once: true }} transition={{ delay: 0.12 }}>
-                <span className="mono-label">STACK EM CONSTRUÇÃO</span>
-                <div className="skill-cloud">
-                  {skills.map(({ name, level, icon: Icon }) => (
-                    <span className="skill-chip" key={name}><Icon size={14} />{name}<small>{level}</small></span>
-                  ))}
-                </div>
-              </motion.div>
-            </div>
-          </div>
-        </section>
-
-        <section className="section knowledge" id="conhecimentos">
-          <SectionHeading
-            index="02"
-            eyebrow="Conhecimentos"
-            title="Áreas que estou aprofundando."
-            copy="Em vez de listar cada disciplina da graduação, organizei aqui os conhecimentos que realmente estão formando minha base técnica hoje."
-          />
-
-          <div className="knowledge-list">
-            {knowledgeAreas.map((area, index) => (
-              <motion.article
-                key={area.number}
-                className="knowledge-row"
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-35px' }}
-                transition={{ duration: 0.48, delay: index * 0.05 }}
-              >
-                <span className="knowledge-index">{area.number}</span>
-                <div className="knowledge-copy">
-                  <h3>{area.title}</h3>
-                  <p>{area.description}</p>
-                </div>
-                <div className="knowledge-topics">
-                  {area.topics.map((topic) => <span key={topic}>{topic}</span>)}
-                </div>
-              </motion.article>
-            ))}
-          </div>
-
-          <div className="academic-note">
-            <span className="mono-label">FORMAÇÃO EM ANDAMENTO</span>
-            <p>Também fazem parte da graduação Matemática e Estatística para IA, Metodologias Ágeis e Empreendedorismo.</p>
-          </div>
-        </section>
-
-        <section className="section projects" id="projetos">
-          <SectionHeading
-            index="03"
-            eyebrow="Projetos"
-            title="Do estudo para algo que funciona."
-            copy="Alguns projetos públicos que mostram minha evolução em web, backend, banco de dados e integração com IA."
-          />
-
-          <div className="projects-list">
-            {projects.map((project) => (
-              <motion.a
-                href={project.href}
-                target="_blank"
-                rel="noreferrer"
-                className="project-card"
-                key={project.title}
-                initial={{ opacity: 0, y: 28 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-60px' }}
-                whileHover="hover"
-              >
-                <div className="project-index">{project.number}</div>
-                <div className="project-mark">{project.mark}</div>
-                <div className="project-main">
-                  <span className="mono-label">{project.eyebrow}</span>
-                  <h3>{project.title}</h3>
-                  <p>{project.description}</p>
-                  <div className="tech-row">{project.tech.map((tech) => <span key={tech}>{tech}</span>)}</div>
-                </div>
-                <motion.div className="project-arrow" variants={{ hover: { x: 5, y: -5 } }}><ArrowUpRight /></motion.div>
-              </motion.a>
-            ))}
-          </div>
-
-          <a className="text-link" href="https://github.com/ViniciusMota22?tab=repositories" target="_blank" rel="noreferrer">
-            Ver todos os repositórios <ArrowUpRight size={16} />
-          </a>
-        </section>
-
-        <section className="section contact" id="contato">
-          <motion.div className="contact-panel" initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <div className="contact-copy">
-              <span className="section-kicker"><span>04</span>Contato</span>
-              <h2>Vamos transformar uma ideia em projeto.</h2>
-              <p>Quer conversar sobre tecnologia, projeto acadêmico, desenvolvimento ou uma oportunidade de aprendizado?</p>
-            </div>
-
-            <div className="contact-actions">
-              <a className="contact-link" href="mailto:vmota287@gmail.com"><Mail size={18} /><span><small>E-mail</small>vmota287@gmail.com</span><ArrowUpRight size={18} /></a>
-              <a className="contact-link" href="https://github.com/ViniciusMota22" target="_blank" rel="noreferrer"><Code2 size={18} /><span><small>GitHub</small>@ViniciusMota22</span><ArrowUpRight size={18} /></a>
-              <a className="contact-link" href="https://www.linkedin.com/in/vinicius-mota-4a443a352/" target="_blank" rel="noreferrer"><User size={18} /><span><small>LinkedIn</small>Vinicius Mota</span><ArrowUpRight size={18} /></a>
-              <button className="contact-link copy-link" onClick={copyEmail}>
-                {copied ? <Check size={18} /> : <Copy size={18} />}
-                <span><small>Atalho</small>{copied ? 'E-mail copiado!' : 'Copiar e-mail'}</span>
-                <span className="shortcut">CTRL+C</span>
-              </button>
-            </div>
-          </motion.div>
-        </section>
-      </main>
-
-      <footer>
-        <span>© 2026 Vinicius Mota</span>
-        <span>React + JavaScript + Motion</span>
-        <a href="#top">Voltar ao topo ↑</a>
-      </footer>
-    </div>
-  )
+      <section className="contact section" id="contato" aria-labelledby="contact-title"><div className="wrap"><Reveal><span className="eyebrow">04 — Vamos conversar</span><h2 id="contact-title">Algo em mente?<br/><em>Vamos dar o primeiro passo.</em></h2><p>Projetos, tecnologia ou uma oportunidade de aprendizado.<br/>Estou por aqui.</p><div className="contact-actions"><MagneticLink href={`mailto:${EMAIL}`} className="button-primary">Me mande um oi <ArrowUpRight size={18}/></MagneticLink><button className="copy-button" onClick={copyEmail}>{copyState === 'success' ? <Check size={16}/> : <Copy size={16}/>}<span>{copyState === 'success' ? 'E-mail copiado' : 'Copiar e-mail'}</span></button></div><div className="email-caption"><a href={`mailto:${EMAIL}`}>{EMAIL}</a><span role="status" className="copy-feedback">{copyState === 'success' ? 'Copiado!' : copyState === 'error' ? 'Selecione o endereço acima para copiar.' : ''}</span></div></Reveal></div></section>
+    </main>
+    <footer className="footer wrap"><a className="brand" href="#top" aria-label="Voltar ao início">vm<span>.</span></a><span>© 2026 Vinicius Mota</span><div className="footer-links"><a href={GITHUB} target="_blank" rel="noreferrer">GitHub <ArrowUpRight size={14}/></a><a href="https://www.linkedin.com/in/vinicius-mota-4a443a352/" target="_blank" rel="noreferrer">LinkedIn <ArrowUpRight size={14}/></a><a href="#top" className="back-top" aria-label="Voltar ao topo"><ArrowUp size={17}/></a></div></footer>
+  </MotionConfig>
 }
-
 export default App
