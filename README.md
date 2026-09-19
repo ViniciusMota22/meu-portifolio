@@ -1,4 +1,4 @@
-# Vinicius Mota — Portfólio minimalista
+# Vinicius Mota
 
 Portfólio em React, Vite e Motion. Inclui apresentação pessoal, projetos, formação, conhecimentos e contatos.
 
