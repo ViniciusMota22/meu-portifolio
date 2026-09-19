@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { animate, AnimatePresence, motion, MotionConfig, useMotionTemplate, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from 'motion/react'
 import { ArrowDown, ArrowRight, ArrowUp, ArrowUpRight, Camera, Check, ChevronDown, Code2, Copy, Menu, Moon, Pause, Play, Sun, Terminal, X } from 'lucide-react'
 import { SiC, SiCplusplus, SiCss, SiFlask, SiHtml5, SiJavascript, SiPostgresql, SiPython, SiReact, SiVite, SiVuedotjs } from 'react-icons/si'
-import { EMAIL, GITHUB, INSTAGRAM, navigation, projects, visualLab, areas, skills, processNotes } from './content.jsx'
+import { EMAIL, GITHUB, INSTAGRAM, skills } from './content.jsx'
+import { contentByLanguage, copy } from './i18n.js'
 
 const easing = [.22, 1, .36, 1]
 const skillIcons = {
@@ -18,12 +19,6 @@ const skillIcons = {
   PostgreSQL: SiPostgresql,
   Vite: SiVite,
 }
-const terminalResponses = {
-  projetos: '04 projetos publicados · do Python ao Vue',
-  stack: 'python · javascript · c · c++ · html · css',
-  contato: 'vmota287@gmail.com · @yxcosta_o',
-}
-
 function Reveal({ children, className = '', delay = 0 }) {
   const reduced = useReducedMotion()
   return <motion.div className={className} initial={reduced ? false : { opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: .1 }} transition={{ duration: .7, delay, ease: easing }}>{children}</motion.div>
@@ -139,20 +134,20 @@ function MagneticField() {
   return <div className="magnetic-field" aria-hidden="true">{filings.map((filing, index) => <span className="filing-drift" key={index} style={{ left: filing.left, top: filing.top, animationDelay: filing.delay, animationDuration: filing.duration, '--drift-x': filing.dx, '--drift-y': filing.dy }}><span ref={node => { needles.current[index] = node }} className="filing-needle" style={{ color: filing.color, width: filing.size, height: filing.size, opacity: filing.opacity, transform: `rotate(${filing.angle}deg)` }}/></span>)}</div>
 }
 
-function TerminalPanel() {
+function TerminalPanel({ t }) {
   const [command, setCommand] = useState(null)
   const lines = [
     ['prompt', 'vinicius@portfolio ~ % whoami'],
-    ['answer', 'estudante de IA + desenvolvedor'],
-    ['prompt', 'vinicius@portfolio ~ % foco --agora'],
+    ['answer', t.terminalAnswer],
+    ['prompt', `vinicius@portfolio ~ % ${t.terminalFocus}`],
   ]
   return <motion.div className="terminal-panel" initial={{ opacity: 0, y: 24, rotateX: -8 }} animate={{ opacity: 1, y: 0, rotateX: 0 }} transition={{ delay: .65, duration: .8, ease: easing }}>
     <div className="terminal-bar"><span/><span/><span/><div><Terminal size={13}/> terminal — vm</div></div>
-    <div className="terminal-body">{lines.map(([kind, text], index) => <motion.div key={text} className={`terminal-line ${kind}`} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: .85 + index * .13 }}>{text}</motion.div>)}<AnimatePresence mode="wait" initial={false}><motion.div key={command || 'auto'} className="terminal-line answer terminal-dynamic" initial={{ opacity: 0, x: -8, filter: 'blur(4px)' }} animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }} exit={{ opacity: 0, x: 8, filter: 'blur(4px)' }} transition={{ duration: .28 }}>{command ? terminalResponses[command] : <TypewriterText texts={['web · dados · experiências úteis', 'interfaces que explicam o produto', 'código que vira experiência', 'IA aplicada a problemas reais']} speed={38} pause={1650}/>}</motion.div></AnimatePresence><div className="terminal-commands" aria-label="Explorar o terminal">{Object.keys(terminalResponses).map(item => <button key={item} className={command === item ? 'is-active' : ''} onClick={() => setCommand(command === item ? null : item)}><span>$</span> {item}</button>)}</div></div>
+    <div className="terminal-body">{lines.map(([kind, text], index) => <motion.div key={text} className={`terminal-line ${kind}`} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: .85 + index * .13 }}>{text}</motion.div>)}<AnimatePresence mode="wait" initial={false}><motion.div key={command || 'auto'} className="terminal-line answer terminal-dynamic" initial={{ opacity: 0, x: -8, filter: 'blur(4px)' }} animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }} exit={{ opacity: 0, x: 8, filter: 'blur(4px)' }} transition={{ duration: .28 }}>{command ? t.terminalResponses[command] : <TypewriterText texts={t.terminalWords} speed={38} pause={1650}/>}</motion.div></AnimatePresence><div className="terminal-commands" aria-label={t.terminalLabel}>{Object.keys(t.terminalCommands).map(item => <button key={item} className={command === item ? 'is-active' : ''} onClick={() => setCommand(command === item ? null : item)}><span>$</span> {t.terminalCommands[item]}</button>)}</div></div>
   </motion.div>
 }
 
-function StackCard({ note, position, onNext }) {
+function StackCard({ note, position, count, onNext, t }) {
   const x = useMotionValue(0)
   const dragRotate = useTransform(x, [-260, 0, 260], [-12, 0, 12])
   const dragOpacity = useTransform(x, [-280, -160, 0, 160, 280], [.1, .75, 1, .75, .1])
@@ -185,27 +180,27 @@ function StackCard({ note, position, onNext }) {
     }
     dismiss(direction)
   }
-  return <motion.div className="process-card-layer" aria-hidden={!top} animate={{ y: position * 18, x: position * 5, scale: 1 - position * .04, rotate: (position % 2 ? 1 : -1) * position * 1.8, opacity: 1 - position * .18 }} transition={{ type: 'spring', stiffness: 280, damping: 28 }} style={{ zIndex: processNotes.length - position, pointerEvents: top ? 'auto' : 'none' }}>
-    <motion.button ref={button} className="process-card" tabIndex={top ? 0 : -1} drag={top ? 'x' : false} dragConstraints={{ left: 0, right: 0 }} dragElastic={.78} style={{ x, rotate: dragRotate, opacity: top ? dragOpacity : 1 }} whileTap={top ? { scale: .985, cursor: 'grabbing' } : undefined} onDragStart={() => { dragged.current = true }} onDragEnd={finish} onClick={() => { if (top && !dragged.current) dismiss(1) }} aria-label={`${note.title} — arraste ou clique para mostrar o próximo cartão`}>
-      <span>{note.number}</span><span className="process-card-title">{note.title}</span><p>{note.text}</p><small>Arraste para o lado ou clique</small>
+  return <motion.div className="process-card-layer" aria-hidden={!top} animate={{ y: position * 18, x: position * 5, scale: 1 - position * .04, rotate: (position % 2 ? 1 : -1) * position * 1.8, opacity: 1 - position * .18 }} transition={{ type: 'spring', stiffness: 280, damping: 28 }} style={{ zIndex: count - position, pointerEvents: top ? 'auto' : 'none' }}>
+    <motion.button ref={button} className="process-card" tabIndex={top ? 0 : -1} drag={top ? 'x' : false} dragConstraints={{ left: 0, right: 0 }} dragElastic={.78} style={{ x, rotate: dragRotate, opacity: top ? dragOpacity : 1 }} whileTap={top ? { scale: .985, cursor: 'grabbing' } : undefined} onDragStart={() => { dragged.current = true }} onDragEnd={finish} onClick={() => { if (top && !dragged.current) dismiss(1) }} aria-label={`${note.title} — ${t.processCardAction}`}>
+      <span>{note.number}</span><span className="process-card-title">{note.title}</span><p>{note.text}</p><small>{t.processHint}</small>
     </motion.button>
   </motion.div>
 }
 
-function ProcessStack() {
+function ProcessStack({ notes, t }) {
   const [active, setActive] = useState(0)
-  const next = () => setActive(value => (value + 1) % processNotes.length)
+  const next = () => setActive(value => (value + 1) % notes.length)
   return <div className="process-stack-wrap">
-    <div className="process-stack">{processNotes.map((note, index) => {
-      const position = (index - active + processNotes.length) % processNotes.length
-      return <StackCard key={note.number} note={note} position={position} onNext={next}/>
+    <div className="process-stack">{notes.map((note, index) => {
+      const position = (index - active + notes.length) % notes.length
+      return <StackCard key={note.number} note={note} position={position} count={notes.length} onNext={next} t={t}/>
     })}</div>
-    <p className="sr-only" aria-live="polite">Cartão atual: {processNotes[active].title}</p>
-    <div className="stack-dots" aria-label="Escolher etapa do processo">{processNotes.map((note, index) => <button key={note.number} className={index === active ? 'active' : ''} onClick={() => setActive(index)} aria-label={`Mostrar etapa ${index + 1}: ${note.title}`} aria-current={index === active ? 'step' : undefined}/>)}</div>
+    <p className="sr-only" aria-live="polite">{t.currentCard} {notes[active].title}</p>
+    <div className="stack-dots" aria-label={t.chooseProcess}>{notes.map((note, index) => <button key={note.number} className={index === active ? 'active' : ''} onClick={() => setActive(index)} aria-label={`${t.showStep} ${index + 1}: ${note.title}`} aria-current={index === active ? 'step' : undefined}/>)}</div>
   </div>
 }
 
-function Portrait() {
+function Portrait({ t }) {
   const reduced = useReducedMotion()
   const mx = useMotionValue(0), my = useMotionValue(0)
   const rotateX = useSpring(my, { stiffness: 100, damping: 22 })
@@ -218,13 +213,13 @@ function Portrait() {
   }} onPointerLeave={() => { mx.set(0); my.set(0) }}>
     <motion.figure className="portrait" style={{ rotateX, rotateY }}>
       <img src="/vinicius-mota.jfif" alt="Vinicius Mota" width="1024" height="1024" fetchPriority="high" />
-      <figcaption><span>Vinicius Mota</span><span>IA & desenvolvimento</span></figcaption>
+      <figcaption><span>Vinicius Mota</span><span>{t.portraitRole}</span></figcaption>
     </motion.figure>
-    <span className="portrait-caption"><span aria-hidden="true">↳</span> Aprendendo. Experimentando. Criando.</span>
+    <span className="portrait-caption"><span aria-hidden="true">↳</span> {t.portraitCaption}</span>
   </div>
 }
 
-function VideoPreview({ project, compact = false }) {
+function VideoPreview({ project, t, compact = false }) {
   const video = useRef(null)
   const [playing, setPlaying] = useState(false)
   const reduced = useReducedMotion()
@@ -254,36 +249,36 @@ function VideoPreview({ project, compact = false }) {
     if (event.pointerType === 'mouse') pause()
   }
   return <div className="media-interaction" onPointerMove={move} onPointerEnter={event => { if (event.pointerType === 'mouse') play() }} onPointerLeave={leave}><motion.div className="media-tilt" style={{ rotateX, rotateY, transformPerspective: 900 }}><div className={`project-media ${compact ? 'project-media-wide' : ''}`}>
-    <video ref={video} src={project.video} poster={project.poster} muted loop playsInline preload="metadata" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} aria-label={`Demonstração do projeto ${project.title}`}/>
+    <video ref={video} src={project.video} poster={project.poster} muted loop playsInline preload="metadata" onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)} aria-label={`${t.videoDemo} ${project.title}`}/>
     <span className="media-wash" aria-hidden="true"/>
     <motion.span className="media-spotlight" style={{ background: spotlight }} aria-hidden="true"/>
     <div className="media-top"><span>{project.number || 'LAB'}</span><span>{project.caption || project.kicker}</span></div>
-    {project.href ? <a className="media-open" href={project.href} target="_blank" rel="noreferrer"><span>Ver projeto</span><ArrowUpRight size={16}/></a> : <span className="media-open media-open-label"><span>Em exibição</span></span>}
-    <button className="media-control" onClick={toggle} aria-label={playing ? `Pausar demonstração de ${project.title}` : `Reproduzir demonstração de ${project.title}`}>{playing ? <Pause size={16} fill="currentColor"/> : <Play size={16} fill="currentColor"/>}</button>
+    {project.href ? <a className="media-open" href={project.href} target="_blank" rel="noreferrer"><span>{t.viewProject}</span><ArrowUpRight size={16}/></a> : <span className="media-open media-open-label"><span>{t.onDisplay}</span></span>}
+    <button className="media-control" onClick={toggle} aria-label={`${playing ? t.pauseDemo : t.playDemo} ${project.title}`}>{playing ? <Pause size={16} fill="currentColor"/> : <Play size={16} fill="currentColor"/>}</button>
   </div></motion.div></div>
 }
 
-function ProjectCard({ project, index }) {
+function ProjectCard({ project, index, t }) {
   const [expanded, setExpanded] = useState(false)
   const reduced = useReducedMotion()
   return <Reveal className="project-item" delay={index * .07}>
     <article>
-      <VideoPreview project={project}/>
+      <VideoPreview project={project} t={t}/>
       <div className="project-heading"><h3><a href={project.href} target="_blank" rel="noreferrer">{project.title}</a></h3><span className="project-number">0{index + 1}</span></div>
       <p className="project-category">{project.category}</p>
       <p className="project-description">{project.description}</p>
-      <button className="details-trigger" aria-expanded={expanded} aria-controls={`project-details-${index}`} onClick={() => setExpanded(!expanded)}>{expanded ? 'Menos detalhes' : 'Tecnologias do projeto'}<ChevronDown size={16} className={expanded ? 'rotated' : ''}/></button>
-      <AnimatePresence initial={false}>{expanded && <motion.div id={`project-details-${index}`} initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: reduced ? 0 : .32, ease: easing }} className="project-details"><div className="tags">{project.tech.map(tech => <span key={tech}>{tech}</span>)}</div><a className="source-link" href={project.href} target="_blank" rel="noreferrer">Explorar o código <ArrowUpRight size={15}/></a></motion.div>}</AnimatePresence>
+      <button className="details-trigger" aria-expanded={expanded} aria-controls={`project-details-${index}`} onClick={() => setExpanded(!expanded)}>{expanded ? t.lessDetails : t.projectTechnologies}<ChevronDown size={16} className={expanded ? 'rotated' : ''}/></button>
+      <AnimatePresence initial={false}>{expanded && <motion.div id={`project-details-${index}`} initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: reduced ? 0 : .32, ease: easing }} className="project-details"><div className="tags">{project.tech.map(tech => <span key={tech}>{tech}</span>)}</div><a className="source-link" href={project.href} target="_blank" rel="noreferrer">{t.exploreCode} <ArrowUpRight size={15}/></a></motion.div>}</AnimatePresence>
     </article>
   </Reveal>
 }
 
-function ProjectGallery() {
+function ProjectGallery({ projects, visualLab, t }) {
   const showcase = [...projects, visualLab]
-  return <div className="project-grid project-grid-four">{showcase.map((project, index) => <ProjectCard key={project.number} project={project} index={index}/>)}</div>
+  return <div className="project-grid project-grid-four">{showcase.map((project, index) => <ProjectCard key={project.number} project={project} index={index} t={t}/>)}</div>
 }
 
-function Knowledge() {
+function Knowledge({ areas }) {
   const [open, setOpen] = useState(0)
   const reduced = useReducedMotion()
   return <div className="knowledge-list">{areas.map((area, index) => <div className={`knowledge-item ${open === index ? 'is-open' : ''}`} key={area.label}>
@@ -294,11 +289,14 @@ function Knowledge() {
 
 function App() {
   const [theme, setTheme] = useState(() => { try { return localStorage.getItem('vm-minimal-theme') || 'light' } catch { return 'light' } })
+  const [language, setLanguage] = useState(() => { try { return localStorage.getItem('vm-portfolio-language') === 'en' ? 'en' : 'pt' } catch { return 'pt' } })
   const [menuOpen, setMenuOpen] = useState(false)
   const [activeSection, setActiveSection] = useState('top')
   const [copyState, setCopyState] = useState('idle')
   const menuButton = useRef(null), copyTimer = useRef(null), heroRef = useRef(null)
   const reduced = useReducedMotion()
+  const t = copy[language]
+  const content = contentByLanguage[language]
   const { scrollYProgress } = useScroll()
   const { scrollYProgress: heroProgress } = useScroll({ target: heroRef, offset: ['start start', 'end start'] })
   const scaleX = useSpring(scrollYProgress, { stiffness: 160, damping: 30 })
@@ -309,6 +307,12 @@ function App() {
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'light' ? '#ffffff' : '#161719')
     try { localStorage.setItem('vm-minimal-theme', theme) } catch { /* Local persistence is optional. */ }
   }, [theme])
+  useEffect(() => {
+    document.documentElement.lang = language === 'pt' ? 'pt-BR' : 'en'
+    document.title = t.title
+    document.querySelector('meta[name="description"]')?.setAttribute('content', t.metaDescription)
+    try { localStorage.setItem('vm-portfolio-language', language) } catch { /* Local persistence is optional. */ }
+  }, [language, t])
   useEffect(() => {
     const sections = [...document.querySelectorAll('main > section[id]')]
     let frame = 0
@@ -340,38 +344,38 @@ function App() {
     copyTimer.current = setTimeout(() => setCopyState('idle'), 4000)
   }
   return <MotionConfig reducedMotion="user">
-    <a href="#conteudo" className="skip-link">Pular para o conteúdo</a>
+    <a href="#conteudo" className="skip-link">{t.skip}</a>
     <motion.div aria-hidden="true" className="scroll-progress" style={{ scaleX: reduced ? scrollYProgress : scaleX }}/>
     <div className="page-shell">
     <header className="header"><div className="nav-wrap wrap">
-      <a href="#top" className="brand" aria-label="Vinicius Mota — início">vm<span>.</span></a>
-      <nav className="desktop-nav" aria-label="Navegação principal">{navigation.map(([id, label]) => <a key={id} href={`#${id}`} aria-current={activeSection === id ? 'location' : undefined}>{activeSection === id && <motion.span className="nav-active" layoutId="active-navigation" transition={{ type: 'spring', stiffness: 300, damping: 32 }}/>}<span>{label}</span></a>)}</nav>
-      <div className="nav-actions"><button className="icon-button" aria-label={theme === 'light' ? 'Ativar tema escuro' : 'Ativar tema claro'} onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>{theme === 'light' ? <Moon size={18}/> : <Sun size={18}/>}</button><a href="#contato" className="nav-contact">Contato <ArrowUpRight size={16}/></a><button ref={menuButton} className="icon-button menu-button" aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'} aria-expanded={menuOpen} aria-controls="mobile-navigation" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X size={21}/> : <Menu size={21}/>}</button></div>
-    </div><AnimatePresence>{menuOpen && <motion.nav id="mobile-navigation" className="mobile-nav" aria-label="Navegação móvel" initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: .2 }}>{[...navigation, ['contato', 'Contato']].map(([id, label]) => <a key={id} href={`#${id}`} onClick={() => setMenuOpen(false)}>{label}<ArrowUpRight size={18}/></a>)}</motion.nav>}</AnimatePresence></header>
+      <a href="#top" className="brand" aria-label={t.home}>vm<span>.</span></a>
+      <nav className="desktop-nav" aria-label={t.navigation}>{content.navigation.map(([id, label]) => <a key={id} href={`#${id}`} aria-current={activeSection === id ? 'location' : undefined}>{activeSection === id && <motion.span className="nav-active" layoutId="active-navigation" transition={{ type: 'spring', stiffness: 300, damping: 32 }}/>}<span>{label}</span></a>)}</nav>
+      <div className="nav-actions"><div className="language-switch" role="group" aria-label={t.languageControl}><button type="button" lang="pt-BR" title="Português" aria-label="Português" aria-pressed={language === 'pt'} onClick={() => setLanguage('pt')}>PT</button><button type="button" lang="en" title="English" aria-label="English" aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>EN</button></div><button className="icon-button" aria-label={theme === 'light' ? t.darkTheme : t.lightTheme} onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>{theme === 'light' ? <Moon size={18}/> : <Sun size={18}/>}</button><a href="#contato" className="nav-contact">{t.contactNav} <ArrowUpRight size={16}/></a><button ref={menuButton} className="icon-button menu-button" aria-label={menuOpen ? t.closeMenu : t.openMenu} aria-expanded={menuOpen} aria-controls="mobile-navigation" onClick={() => setMenuOpen(!menuOpen)}>{menuOpen ? <X size={21}/> : <Menu size={21}/>}</button></div>
+    </div><AnimatePresence>{menuOpen && <motion.nav id="mobile-navigation" className="mobile-nav" aria-label={t.mobileNavigation} initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: .2 }}>{[...content.navigation, ['contato', t.contactNav]].map(([id, label]) => <a key={id} href={`#${id}`} onClick={() => setMenuOpen(false)}>{label}<ArrowUpRight size={18}/></a>)}</motion.nav>}</AnimatePresence></header>
 
     <main id="conteudo">
       <section ref={heroRef} className="hero wrap" id="top" aria-labelledby="hero-title"><motion.div className="hero-field-layer" style={{ y: reduced ? 0 : fieldY }}><MagneticField/></motion.div><div className="hero-grid">
-        <div className="hero-main"><Reveal><div className="eyebrow"><span className="small-line"/> Vinicius Mota · IA & desenvolvimento</div></Reveal>
-          <h1 id="hero-title"><SplitLine delay={.06}>Curiosidade que</SplitLine><SplitLine delay={.16}>vira <em><TypewriterText texts={['experiência.', 'produto.', 'código.', 'solução.']} speed={72} pause={1750}/></em></SplitLine></h1>
-          <Reveal delay={.12}><p className="hero-description">Exploro código, dados e inteligência artificial para transformar o que aprendo em algo que você pode usar.</p></Reveal>
-          <Reveal className="hero-actions" delay={.18}><MagneticLink href="#projetos" className="button-primary">Conheça meus projetos <ArrowDown size={17}/></MagneticLink><a className="text-link" href="#sobre">Um pouco sobre mim <ArrowRight size={16}/></a></Reveal>
-          <Reveal className="hero-note" delay={.22}><Code2 size={15}/><span>Tecnologia em Inteligência Artificial · 3º período</span></Reveal>
-          <TerminalPanel/>
-        </div><motion.div className="hero-portrait" style={{ y: reduced ? 0 : portraitY }}><Reveal delay={.15}><Portrait/></Reveal></motion.div>
-      </div><div className="hero-bottom"><span>Uma ideia de cada vez.</span><a href="#projetos">Explore <ArrowDown size={14}/></a></div></section>
+        <div className="hero-main"><Reveal><div className="eyebrow"><span className="small-line"/> {t.heroEyebrow}</div></Reveal>
+          <h1 id="hero-title" aria-label={`${t.heroLine1} ${t.heroLine2} ${t.heroWords[0]}`}><SplitLine delay={.06}>{t.heroLine1}</SplitLine><SplitLine delay={.16}>{t.heroLine2} <em><TypewriterText key={language} texts={t.heroWords} speed={72} pause={1750}/></em></SplitLine></h1>
+          <Reveal delay={.12}><p className="hero-description">{t.heroDescription}</p></Reveal>
+          <Reveal className="hero-actions" delay={.18}><MagneticLink href="#projetos" className="button-primary">{t.heroProjects} <ArrowDown size={17}/></MagneticLink><a className="text-link" href="#sobre">{t.heroAbout} <ArrowRight size={16}/></a></Reveal>
+          <Reveal className="hero-note" delay={.22}><Code2 size={15}/><span>{t.heroNote}</span></Reveal>
+          <TerminalPanel key={language} t={t}/>
+        </div><motion.div className="hero-portrait" style={{ y: reduced ? 0 : portraitY }}><Reveal delay={.15}><Portrait t={t}/></Reveal></motion.div>
+      </div><div className="hero-bottom"><span>{t.heroBottom}</span><a href="#projetos">{t.heroExplore} <ArrowDown size={14}/></a></div></section>
 
-      <section className="projects section wrap" id="projetos" aria-labelledby="projects-title"><Reveal className="section-heading"><div><span className="eyebrow">01 — Projetos selecionados</span><h2 id="projects-title">O código em <em>movimento.</em></h2></div><a className="text-link" href={`${GITHUB}?tab=repositories`} target="_blank" rel="noreferrer">Todos no GitHub <ArrowUpRight size={16}/></a></Reveal><ProjectGallery/></section>
+      <section className="projects section wrap" id="projetos" aria-labelledby="projects-title"><Reveal className="section-heading"><div><span className="eyebrow">{t.projectsEyebrow}</span><h2 id="projects-title">{t.projectsTitle1} <em>{t.projectsTitle2}</em></h2></div><a className="text-link" href={`${GITHUB}?tab=repositories`} target="_blank" rel="noreferrer">{t.allGithub} <ArrowUpRight size={16}/></a></Reveal><ProjectGallery projects={content.projects} visualLab={content.visualLab} t={t}/></section>
 
-      <section className="about section" id="sobre" aria-labelledby="about-title"><div className="wrap about-grid"><Reveal><span className="eyebrow">02 — Sobre mim</span><h2 id="about-title">Gosto de entender.<br/><em>Mais ainda de criar.</em></h2><a className="text-link" href="https://www.linkedin.com/in/vinicius-mota-4a443a352/" target="_blank" rel="noreferrer">Vamos nos conectar <ArrowUpRight size={16}/></a></Reveal><Reveal className="about-copy"><p className="about-lead">O melhor jeito de aprender, para mim, é construir.</p><p>Sou estudante de Tecnologia em Inteligência Artificial, no 3º período. Minha curiosidade passa por todo o caminho: da lógica à interface, dos dados à experiência.</p><p>Estou desenvolvendo minha base técnica com projetos acadêmicos e aplicações práticas de IA. Gosto de entender o porquê de cada escolha — e o que acontece quando as ideias saem do papel.</p><div className="education"><span>Formação em andamento</span><strong>Tecnologia em Inteligência Artificial</strong><span>3º período · IA aplicada + desenvolvimento</span></div></Reveal></div></section>
+      <section className="about section" id="sobre" aria-labelledby="about-title"><div className="wrap about-grid"><Reveal><span className="eyebrow">{t.aboutEyebrow}</span><h2 id="about-title">{t.aboutTitle1}<br/><em>{t.aboutTitle2}</em></h2><a className="text-link" href="https://www.linkedin.com/in/vinicius-mota-4a443a352/" target="_blank" rel="noreferrer">{t.connect} <ArrowUpRight size={16}/></a></Reveal><Reveal className="about-copy"><p className="about-lead">{t.aboutLead}</p><p>{t.aboutParagraph1}</p><p>{t.aboutParagraph2}</p><div className="education"><span>{t.educationLabel}</span><strong>{t.educationDegree}</strong><span>{t.educationStage}</span></div></Reveal></div></section>
 
-      <section className="process section wrap" aria-labelledby="process-title"><Reveal><span className="eyebrow">Processo em movimento</span><h2 id="process-title">Ideias que se<br/><em>empilham e evoluem.</em></h2><p className="section-description">Uma pilha interativa sobre como transformo curiosidade em projeto.</p></Reveal><Reveal><ProcessStack/></Reveal></section>
+      <section className="process section wrap" aria-labelledby="process-title"><Reveal><span className="eyebrow">{t.processEyebrow}</span><h2 id="process-title">{t.processTitle1}<br/><em>{t.processTitle2}</em></h2><p className="section-description">{t.processDescription}</p></Reveal><Reveal><ProcessStack notes={content.processNotes} t={t}/></Reveal></section>
 
-      <section className="knowledge section wrap" id="conhecimentos" aria-labelledby="knowledge-title"><div className="knowledge-grid"><Reveal><span className="eyebrow">03 — Conhecimentos</span><h2 id="knowledge-title" aria-label="Conectando os pontos."><WavyText text="Conectando"/><br/><em><WavyText text="os pontos."/></em></h2><p className="section-description">Uma base que cresce com cada projeto.<br/>Explore minhas áreas de estudo.</p></Reveal><Reveal><Knowledge/></Reveal></div><Reveal className="stack"><span className="eyebrow">Ferramentas em construção</span><ul className="tech-icons" aria-label="Tecnologias e ferramentas">{skills.map((skill) => { const Icon = skillIcons[skill]; return <motion.li className="tech-icon" key={skill} tabIndex={0} aria-label={skill} data-label={skill} title={skill} whileHover={reduced ? undefined : { y: -3 }} transition={{ type: 'spring', stiffness: 360, damping: 24 }}><Icon aria-hidden="true"/></motion.li> })}</ul></Reveal></section>
+      <section className="knowledge section wrap" id="conhecimentos" aria-labelledby="knowledge-title"><div className="knowledge-grid"><Reveal><span className="eyebrow">{t.knowledgeEyebrow}</span><h2 id="knowledge-title" aria-label={`${t.knowledgeTitle1} ${t.knowledgeTitle2}`}><WavyText text={t.knowledgeTitle1}/><br/><em><WavyText text={t.knowledgeTitle2}/></em></h2><p className="section-description">{t.knowledgeDescription1}<br/>{t.knowledgeDescription2}</p></Reveal><Reveal><Knowledge areas={content.areas}/></Reveal></div><Reveal className="stack"><span className="eyebrow">{t.toolsHeading}</span><ul className="tech-icons" aria-label={t.toolsLabel}>{skills.map((skill) => { const Icon = skillIcons[skill]; return <motion.li className="tech-icon" key={skill} tabIndex={0} aria-label={skill} data-label={skill} title={skill} whileHover={reduced ? undefined : { y: -3 }} transition={{ type: 'spring', stiffness: 360, damping: 24 }}><Icon aria-hidden="true"/></motion.li> })}</ul></Reveal></section>
 
-      <section className="contact section" id="contato" aria-labelledby="contact-title"><div className="wrap"><Reveal><span className="eyebrow">04 — Vamos conversar</span><h2 id="contact-title">Algo em mente?<br/><em>Vamos dar o primeiro passo.</em></h2><p>Projetos, tecnologia ou uma oportunidade de aprendizado.<br/>Estou por aqui.</p><div className="contact-actions"><MagneticLink href={`mailto:${EMAIL}`} className="button-primary">Me mande um oi <ArrowUpRight size={18}/></MagneticLink><a className="instagram-link" href={INSTAGRAM} target="_blank" rel="noreferrer"><Camera size={17}/> Instagram <ArrowUpRight size={15}/></a><button className="copy-button" onClick={copyEmail}>{copyState === 'success' ? <Check size={16}/> : <Copy size={16}/>}<span>{copyState === 'success' ? 'E-mail copiado' : 'Copiar e-mail'}</span></button></div><div className="email-caption"><a href={`mailto:${EMAIL}`}>{EMAIL}</a><span role="status" className="copy-feedback">{copyState === 'success' ? 'Copiado!' : copyState === 'error' ? 'Selecione o endereço acima para copiar.' : ''}</span></div></Reveal></div></section>
+      <section className="contact section" id="contato" aria-labelledby="contact-title"><div className="wrap"><Reveal><span className="eyebrow">{t.contactEyebrow}</span><h2 id="contact-title">{t.contactTitle1}<br/><em>{t.contactTitle2}</em></h2><p>{t.contactDescription1}<br/>{t.contactDescription2}</p><div className="contact-actions"><MagneticLink href={`mailto:${EMAIL}`} className="button-primary">{t.emailCta} <ArrowUpRight size={18}/></MagneticLink><a className="instagram-link" href={INSTAGRAM} target="_blank" rel="noreferrer"><Camera size={17}/> Instagram <ArrowUpRight size={15}/></a><button className="copy-button" onClick={copyEmail}>{copyState === 'success' ? <Check size={16}/> : <Copy size={16}/>}<span>{copyState === 'success' ? t.copiedEmail : t.copyEmail}</span></button></div><div className="email-caption"><a href={`mailto:${EMAIL}`}>{EMAIL}</a><span role="status" className="copy-feedback">{copyState === 'success' ? t.copied : copyState === 'error' ? t.copyError : ''}</span></div></Reveal></div></section>
     </main>
     </div>
-    <footer className="footer-reveal"><div className="wrap footer-inner"><MagneticLink className="footer-cta" href={`mailto:${EMAIL}`}><span>Tem uma ideia?</span><strong>Vamos conversar.</strong><ArrowUpRight/></MagneticLink><div className="footer-meta"><span>© 2026</span><div className="footer-links"><a href={GITHUB} target="_blank" rel="noreferrer">GitHub <ArrowUpRight size={14}/></a><a href="https://www.linkedin.com/in/vinicius-mota-4a443a352/" target="_blank" rel="noreferrer">LinkedIn <ArrowUpRight size={14}/></a><a href={INSTAGRAM} target="_blank" rel="noreferrer">Instagram <ArrowUpRight size={14}/></a><a href="#top" className="back-top" aria-label="Voltar ao topo"><ArrowUp size={17}/></a></div></div></div></footer>
+    <footer className="footer-reveal"><div className="wrap footer-inner"><MagneticLink className="footer-cta" href={`mailto:${EMAIL}`}><span>{t.footerQuestion}</span><strong>{t.footerCta}</strong><ArrowUpRight/></MagneticLink><div className="footer-meta"><span>© 2026</span><div className="footer-links"><a href={GITHUB} target="_blank" rel="noreferrer">GitHub <ArrowUpRight size={14}/></a><a href="https://www.linkedin.com/in/vinicius-mota-4a443a352/" target="_blank" rel="noreferrer">LinkedIn <ArrowUpRight size={14}/></a><a href={INSTAGRAM} target="_blank" rel="noreferrer">Instagram <ArrowUpRight size={14}/></a><a href="#top" className="back-top" aria-label={t.backTop}><ArrowUp size={17}/></a></div></div></div></footer>
   </MotionConfig>
 }
 export default App
